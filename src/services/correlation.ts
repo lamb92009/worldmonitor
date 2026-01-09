@@ -104,11 +104,18 @@ function findRelatedTopics(prediction: string): string[] {
 // Convergence: Multiple diverse source types reporting same topic in short window
 function detectConvergence(events: ClusteredEvent[]): CorrelationSignal[] {
   const signals: CorrelationSignal[] = [];
-  const WINDOW_MS = 30 * 60 * 1000; // 30 min window
+  const WINDOW_MS = 60 * 60 * 1000; // 60 min window (relaxed from 30m)
   const now = Date.now();
 
+  console.log(`[Convergence] Analyzing ${events.length} clusters`);
+
+  let clustersWithItems = 0;
+  let clustersWithEnoughItems = 0;
+
   for (const event of events) {
+    if (event.allItems) clustersWithItems++;
     if (!event.allItems || event.allItems.length < 3) continue;
+    clustersWithEnoughItems++;
 
     // Only consider recent events
     const recentItems = event.allItems.filter(
@@ -119,7 +126,14 @@ function detectConvergence(events: ClusteredEvent[]): CorrelationSignal[] {
     // Count unique source types
     const sourceTypes = new Set<SourceType>();
     for (const item of recentItems) {
-      sourceTypes.add(getSourceType(item.source));
+      const type = getSourceType(item.source);
+      sourceTypes.add(type);
+    }
+
+    // Log clusters with multiple source types for debugging
+    if (sourceTypes.size >= 2) {
+      const types = Array.from(sourceTypes);
+      console.log(`[Convergence] Cluster "${event.primaryTitle.slice(0, 40)}..." has ${sourceTypes.size} types: ${types.join(', ')}`);
     }
 
     // Convergence = 3+ different source types on same story

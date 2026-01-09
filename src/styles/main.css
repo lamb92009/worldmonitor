@@ -140,6 +140,18 @@ body {
   border-color: var(--text-dim);
 }
 
+.github-link {
+  color: var(--text-dim);
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.github-link:hover {
+  color: var(--text);
+}
+
 .search-btn {
   padding: 4px 10px;
   background: transparent;
