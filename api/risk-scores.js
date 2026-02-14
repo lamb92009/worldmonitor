@@ -5,6 +5,7 @@
  */
 
 import { Redis } from '@upstash/redis';
+import { getAcledToken } from './_acled-auth.js';
 
 export const config = {
   runtime: 'edge',
@@ -99,7 +100,7 @@ async function fetchACLEDProtests() {
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     // ACLED API now requires authentication - new endpoint as of Jan 2026
-    const token = process.env.ACLED_ACCESS_TOKEN;
+    const token = await getAcledToken();
     const headers = { 'Accept': 'application/json' };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -240,8 +241,8 @@ export default async function handler(request) {
     });
   }
 
-  if (!process.env.ACLED_ACCESS_TOKEN) {
-    return new Response(JSON.stringify({ error: 'ACLED_ACCESS_TOKEN not configured' }), {
+  if (!process.env.ACLED_ACCESS_TOKEN && !process.env.ACLED_EMAIL) {
+    return new Response(JSON.stringify({ error: 'ACLED not configured' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
