@@ -47,7 +47,10 @@ async function fetchToken(params) {
 
   const response = await fetch('https://acleddata.com/oauth/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'WorldMonitor/2.1 (https://wm.elcasafortuna.com)',
+    },
     body,
   });
 

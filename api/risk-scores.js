@@ -101,7 +101,10 @@ async function fetchACLEDProtests() {
 
     // ACLED API now requires authentication - new endpoint as of Jan 2026
     const token = await getAcledToken();
-    const headers = { 'Accept': 'application/json' };
+    const headers = {
+      'Accept': 'application/json',
+      'User-Agent': 'WorldMonitor/2.1 (https://wm.elcasafortuna.com)',
+    };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }

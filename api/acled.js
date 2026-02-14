@@ -122,6 +122,7 @@ export default async function handler(req) {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'User-Agent': 'WorldMonitor/2.1 (https://wm.elcasafortuna.com)',
       },
     });
 
