@@ -1,4 +1,4 @@
-# Build stage
+# ---- Build stage ----
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -6,24 +6,30 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# ---- Production stage ----
+FROM node:20-alpine
+
+# Install nginx and supervisord
+RUN apk add --no-cache nginx supervisor
+
+# Copy built frontend
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# SPA routing - serve index.html for all routes
-RUN printf 'server {\n\
-    listen 80;\n\
-    server_name _;\n\
-    root /usr/share/nginx/html;\n\
-    index index.html;\n\
-    location / {\n\
-        try_files $uri $uri/ /index.html;\n\
-    }\n\
-    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n\
-        expires 1y;\n\
-        add_header Cache-Control "public, immutable";\n\
-    }\n\
-}\n' > /etc/nginx/conf.d/default.conf
+# Copy API server and Edge Function handlers
+COPY --from=builder /app/src-tauri/sidecar/local-api-server.mjs /app/local-api-server.mjs
+COPY --from=builder /app/api /app/api
+COPY --from=builder /app/package.json /app/package.json
+
+# Install only production dependencies needed by API handlers
+WORKDIR /app
+RUN npm install --omit=dev @upstash/redis
+
+# Copy deploy configs
+COPY deploy/nginx.conf /etc/nginx/http.d/default.conf
+COPY deploy/supervisord.conf /etc/supervisord.conf
+
+# Create nginx pid directory
+RUN mkdir -p /run/nginx
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
