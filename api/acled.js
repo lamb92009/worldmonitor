@@ -4,6 +4,7 @@ import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { getCachedJson, setCachedJson } from './_upstash-cache.js';
 import { recordCacheTelemetry } from './_cache-telemetry.js';
 import { createIpRateLimiter } from './_ip-rate-limit.js';
+import { getAcledToken } from './_acled-auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -68,7 +69,7 @@ export default async function handler(req) {
     });
   }
 
-  const token = process.env.ACLED_ACCESS_TOKEN;
+  const token = await getAcledToken();
   if (!token) {
     return Response.json({
       error: 'ACLED not configured',
